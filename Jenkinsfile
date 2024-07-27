@@ -11,7 +11,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/gastonbarbaccia/jenkins_terraform_s3_demo.git'
+                git branch: 'main', url: 'https://github.com/gastonbarbaccia/jenkins_docker.git'
             }
         }
 
