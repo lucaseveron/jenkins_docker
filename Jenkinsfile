@@ -2,10 +2,8 @@ pipeline {
     agent any
     
     environment {
-        DOCKER_CREDENTIALS_ID = 'docker-hub-credentials' // ID de las credenciales de Docker en Jenkins
         IMAGE_NAME = 'my-app' // Nombre de la imagen
         IMAGE_TAG = 'latest' // Etiqueta de la imagen
-        DOCKER_REGISTRY = 'https://index.docker.io/v1/'
     }
     
     stages {
@@ -27,15 +25,20 @@ pipeline {
         stage('Push Docker Image') {
             steps {
                 script {
-                    // Iniciar sesión en el registro Docker
-                    withDockerRegistry([credentialsId: "${DOCKER_CREDENTIALS_ID}", url: "https://${DOCKER_REGISTRY}"]) {
-                        // Etiquetar la imagen con el registro y subirla
-                        sh "docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${DOCKER_REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}"
-                        sh "docker push ${DOCKER_REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}"
+                    // Iniciar sesión en Docker Hub de manera segura
+                    withCredentials([usernamePassword(credentialsId: 'docker-credentials', usernameVariable: 'DOCKER_USR', passwordVariable: 'DOCKER_PSW')]) {
+                        sh '''
+                            echo $DOCKER_PSW | docker login -u $DOCKER_USR --password-stdin
+                        '''
+                        
+                        // Etiquetar la imagen y empujarla a Docker Hub
+                        sh '''
+                            docker tag ${IMAGE_NAME}:${IMAGE_TAG} $DOCKER_USR/${IMAGE_NAME}:${IMAGE_TAG}
+                            docker push $DOCKER_USR/${IMAGE_NAME}:${IMAGE_TAG}
+                        '''
                     }
                 }
             }
         }
-        
     }
 }
